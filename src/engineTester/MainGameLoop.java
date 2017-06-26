@@ -1,7 +1,9 @@
 package engineTester;
 
+import entities.Entity;
 import models.TexturedModel;
 import org.lwjgl.opengl.Display;
+import org.lwjgl.util.vector.Vector3f;
 import renderEngine.DisplayManager;
 import renderEngine.Loader;
 import models.RawModel;
@@ -17,8 +19,8 @@ public class MainGameLoop {
 
         DisplayManager.createDisplay();
         Loader loader = new Loader();
-        Renderer renderer = new Renderer();
         StaticShader shader = new StaticShader();
+        Renderer renderer = new Renderer(shader);
 
         float[] vertices = {
                 -0.5f, 0.5f, 0f,    // V0
@@ -41,17 +43,18 @@ public class MainGameLoop {
 
         RawModel model = loader.loadToVAO(vertices, textureCoords, indices);
         ModelTexture texture = new ModelTexture(loader.loadTexture("chihuahua"));
-        TexturedModel texturedModel = new TexturedModel(model, texture);
+        TexturedModel staticModel = new TexturedModel(model, texture);
+
+        // Move the quad one position to the left, no rotation, no scale adjustment (i.e., 100%)
+        Entity entity = new Entity(staticModel, new Vector3f(0f, 0f, -1f), 0, 0, 0, 1);
 
         while (!Display.isCloseRequested()) {
+            entity.increasePosition(0, 0, -.1f);
             renderer.prepare();
-
-            // game logic
             shader.start();
-            renderer.render(texturedModel);
+            renderer.render(entity, shader);
             shader.stop();
             DisplayManager.updateDisplay();
-
         }
 
         shader.cleanUp();
