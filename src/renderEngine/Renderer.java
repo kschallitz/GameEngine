@@ -41,7 +41,7 @@ public class Renderer {
     public void prepare() {
         GL11.glEnable(GL11.GL_DEPTH_TEST);
         GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
-        GL11.glClearColor(1, 0, 0, 1);
+        GL11.glClearColor(.5f, 0, .1f, 1);
     }
 
     /**
@@ -63,6 +63,7 @@ public class Renderer {
         // Activate the attribute list in which our data is stored. We used attribute list 0
         GL20.glEnableVertexAttribArray(0);
         GL20.glEnableVertexAttribArray(1);
+        GL20.glEnableVertexAttribArray(2);
 
         // Load up the tranformation matrix
         Matrix4f transformationMatrix = Maths.createTransformationMatrix(entity.getPosition(),
@@ -80,6 +81,7 @@ public class Renderer {
         // We have finished using everyting, so Disable the attribute list
         GL20.glDisableVertexAttribArray(0);
         GL20.glDisableVertexAttribArray(1);
+        GL20.glDisableVertexAttribArray(2);
 
         // Unbind the VAO Vertex Array (0 is the last used)
         GL30.glBindVertexArray(0);

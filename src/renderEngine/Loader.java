@@ -26,15 +26,18 @@ public class Loader {
     private List<Integer> vbos = new ArrayList<>();
     private List<Integer> textures = new ArrayList<>();
 
-    public RawModel loadToVAO(float[] positions, float[] textureCoords, int[] indices) {
+    public RawModel loadToVAO(float[] positions, float[] textureCoords, float[] normals, int[] indices) {
         int vaoID = createVAO();
         bindIndicesBuffer(indices);
 
-        // Positions are a 3d vector x,y,z so tell the method to use 3 coordinates.
+        // Positions stored in VAO 0 - are a 3d vector x,y,z so tell the method to use 3 coordinates.
         storeDataInAttributeList(0, 3, positions);
 
-        // Texture coordinates are 2D
+        // Textures stored in VAO 1 - coordinates are 2D
         storeDataInAttributeList(1, 2, textureCoords);
+
+        // Normals stored in VAO 2 - normals are 3D vectors
+        storeDataInAttributeList(2, 3, normals);
 
         unbindVAO();
 
