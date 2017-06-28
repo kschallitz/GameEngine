@@ -16,27 +16,37 @@ public class Camera {
 
     public void move() {
         // Zoom in / out on Z axis
-        if (Keyboard.isKeyDown(Keyboard.KEY_W)) {
-            position.z -= 0.05;
+        if (Keyboard.isKeyDown(Keyboard.KEY_UP)) {
+            //position.z -= 0.05;
+            position.z -= 1;
         }
-        if (Keyboard.isKeyDown(Keyboard.KEY_X)) {
-            position.z += 0.05f;
+        if (Keyboard.isKeyDown(Keyboard.KEY_DOWN)) {
+            //position.z += 0.05f;
+            position.z += 1;
         }
 
         // Move camera left / right
-        if (Keyboard.isKeyDown(Keyboard.KEY_D)) {
-            position.x += 0.05f;
+        if (Keyboard.isKeyDown(Keyboard.KEY_RIGHT)) {
+            //position.x += 0.05f;
+            position.x += 1;
         }
-        if (Keyboard.isKeyDown(Keyboard.KEY_A)) {
-            position.x -= 0.05f;
+        if (Keyboard.isKeyDown(Keyboard.KEY_LEFT)) {
+            //position.x -= 0.05f;
+            position.x -= 1;
         }
 
         // Move camera up / down
-        if (Keyboard.isKeyDown(Keyboard.KEY_E)) {
-            position.y += 0.05f;
+        if (Keyboard.isKeyDown(Keyboard.KEY_HOME)) {
+            //position.y += 0.05f;
+            position.y += 0.02f;
         }
-        if (Keyboard.isKeyDown(Keyboard.KEY_C)) {
-            position.y -= 0.05f;
+        if (Keyboard.isKeyDown(Keyboard.KEY_END)) {
+            //position.y -= 0.05f;
+            position.y -= 0.02f;
+        }
+        if (Keyboard.isKeyDown(Keyboard.KEY_ESCAPE))
+        {
+            System.exit(-1);
         }
     }
     public Vector3f getPosition() {

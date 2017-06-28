@@ -15,13 +15,13 @@ import terrains.Terrain;
 import textures.ModelTexture;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 /**
  * Created by Kurt on 6/25/2017.
  */
 public class MainGameLoop {
-    private static final int NUM_TREES = 8000;
-    private static ArrayList<Entity> trees = new ArrayList<>();
 
     public static void main(String[] args) {
 
@@ -30,15 +30,25 @@ public class MainGameLoop {
         RawModel model = OBJLoader.loadObjModel("tree", loader);
 
         TexturedModel staticModel = new TexturedModel(model, new ModelTexture(loader.loadTexture("tree")));
+        TexturedModel grass = new TexturedModel(OBJLoader.loadObjModel("grassModel", loader),
+                new ModelTexture(loader.loadTexture("grassTexture")));
+        TexturedModel fern = new TexturedModel(OBJLoader.loadObjModel("fern", loader),
+                new ModelTexture(loader.loadTexture("fern")));
+
+        List<Entity> entities = new ArrayList<>();
+        Random random = new Random();
+        for (int i = 0; i < 1500; i++) {
+            entities.add(new Entity(staticModel, new Vector3f(random.nextFloat() * 1600, 0,
+                    random.nextFloat() * 800), 0, 0, 0, 3));
+            entities.add(new Entity(grass, new Vector3f(random.nextFloat() * 1600, 0,
+                    random.nextFloat() * 800), 0, 0, 0, 1));
+            entities.add(new Entity(fern, new Vector3f(random.nextFloat() * 1600, 0,
+                    random.nextFloat() * 800), 0, 0, 0, 0.6f));
+        }
+
         ModelTexture texture = staticModel.getTexture();
         texture.setShineDamper(20);
         texture.setReflectivity(1);
-
-        for (int i = 0; i < NUM_TREES; i++) {
-            //Entity entity = new Entity(staticModel, new Vector3f(25f, 0, 25), 0, 0, 0, 1);
-            Entity entity = new Entity(staticModel, new Vector3f((float)Math.random() * 800f, 0, (float)Math.random() * 800f), 0, 0, 0, 1);
-            trees.add(entity);
-        }
 
         Light light = new Light(new Vector3f(200, 200, 100), new Vector3f(1, 1, 1));
         Terrain terrain1 = new Terrain(0, 0, loader, new ModelTexture(loader.loadTexture("grass")));
@@ -48,14 +58,10 @@ public class MainGameLoop {
 
         MasterRenderer renderer = new MasterRenderer();
         while (!Display.isCloseRequested()) {
-            //entity.increasePosition(0, 0, -.1f);
-            for (Entity entity : trees) {
-                entity.increaseRotation(0, 1, 0);
-            }
             camera.move();
             renderer.processTerrain(terrain1);
             renderer.processTerrain(terrain2);
-            for (Entity entity : trees) {
+            for (Entity entity : entities) {
                 renderer.processEntity(entity);
             }
 
