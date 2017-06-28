@@ -2,21 +2,33 @@
 
 in vec2 pass_textureCoordinates;
 in vec3 surfaceNormal;
-in vec3 toLightVector;
+in vec3 toLightVector;  //vector pointing to the light source
+in vec3 toCameraVector; //vector pointing to the camera
 
 out vec4 out_color;
 
 uniform sampler2D modelTexture;
 uniform vec3 lightColor;
+uniform float shineDamper;          // How much should reflected light scatter from the surface
+uniform float reflectivity;         // How reflective is the surface
 
 void main(void) {
 
-    vec3 unitNormal = normalize(surfaceNormal);
-    vec3 unitLightNormal = normalize(toLightVector);
+    vec3 unitNormal = normalize(surfaceNormal);             //Normal of surface
+    vec3 unitLightNormal = normalize(toLightVector);        //Vector pointing TOWARD the light source
 
     float nDot1 = dot(unitNormal, unitLightNormal);
-    float brightness = max(nDot1, 0.0);
+    float brightness = max(nDot1, 0.2);                     // ensure that we never go fully black (no light)
     vec3 diffuse = brightness * lightColor;
 
-    out_color = vec4(diffuse, 1.0) * texture(modelTexture, pass_textureCoordinates);
+    vec3 unitVectorToCamera = normalize(toCameraVector);                //Normalize the "to camera" vector to make sure size is 1
+    vec3 lightDirection = -unitLightNormal;                             //Vector pointing AWAY from the light source
+    vec3 reflectedLightDirection = reflect(lightDirection, unitNormal); // use built in reflect func to computer reflected light vector
+
+    float specularFactor = dot(reflectedLightDirection, unitVectorToCamera);// Compute how much reflected light reaches camera
+    specularFactor = max(specularFactor, 0.0);                              // Can't have a negative brightneess
+    float dampedFactor = pow(specularFactor, shineDamper);                  // make lower spec values even lower without affecting upper values too much.
+    vec3 finalSpecular = dampedFactor * reflectivity * lightColor;          // Set the specular light to the color of the light source.
+
+    out_color = vec4(diffuse, 1.0) * texture(modelTexture, pass_textureCoordinates) + vec4(finalSpecular, 1.0);
 }

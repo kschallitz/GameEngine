@@ -7,10 +7,7 @@ import models.RawModel;
 import models.TexturedModel;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.util.vector.Vector3f;
-import renderEngine.DisplayManager;
-import renderEngine.Loader;
-import renderEngine.OBJLoader;
-import renderEngine.Renderer;
+import renderEngine.*;
 import shaders.StaticShader;
 import textures.ModelTexture;
 
@@ -22,35 +19,29 @@ public class MainGameLoop {
 
         DisplayManager.createDisplay();
         Loader loader = new Loader(); // Loads data into VAO
-        StaticShader shader = new StaticShader();
-        Renderer renderer = new Renderer(shader);
-
-
         RawModel model = OBJLoader.loadObjModel("dragon", loader);
 
         TexturedModel staticModel = new TexturedModel(model, new ModelTexture(loader.loadTexture("white")));
+        ModelTexture texture = staticModel.getTexture();
+        texture.setShineDamper(20);
+        texture.setReflectivity(1);
 
-        // Move the quad one position to the left, no rotation, no scale adjustment (i.e., 100%)
-        Entity entity = new Entity(staticModel, new Vector3f(0f, -5f, -25f), 0, 0, 0, 1);
-        Light light = new Light(new Vector3f(0, 0, -20), new Vector3f(1, 1, 1));
+        Entity entity = new Entity(staticModel, new Vector3f(0f, -5, -25), 0, 0, 0, 1);
+        Light light = new Light(new Vector3f(200, 200, 100), new Vector3f(1, 0, 1));
 
         Camera camera = new Camera();
 
-
+        MasterRenderer renderer = new MasterRenderer();
         while (!Display.isCloseRequested()) {
             //entity.increasePosition(0, 0, -.1f);
-            entity.increaseRotation(0, 1, 0);
+            entity.increaseRotation(0, 0, 0);
             camera.move();
-            renderer.prepare();
-            shader.start();
-            shader.loadLight(light);        // Load the light each frame so we can adjust it
-            shader.loadViewMatrix(camera);  // Load up the camera view into the shader
-            renderer.render(entity, shader);
-            shader.stop();
+            renderer.processEntity(entity);
+            renderer.render(light, camera);
             DisplayManager.updateDisplay();
         }
 
-        shader.cleanUp();
+        renderer.cleanUp();
         loader.cleanUp();
         DisplayManager.closeDisplay();
     }

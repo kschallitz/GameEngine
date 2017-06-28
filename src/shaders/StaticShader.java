@@ -20,6 +20,8 @@ public class StaticShader extends ShaderProgram {
     private int location_viewMatrix;
     private int location_lightPosition;
     private int location_lightColor;
+    private int location_shineDamper;
+    private int location_reflectivity;
 
     public StaticShader() {
         super(VERTEX_FILE, FRAGMENT_FILE);
@@ -42,6 +44,22 @@ public class StaticShader extends ShaderProgram {
         location_viewMatrix = super.getUniformLocation("viewMatrix");
         location_lightPosition = super.getUniformLocation("lightPosition");
         location_lightColor = super.getUniformLocation("lightColor");
+        location_shineDamper = super.getUniformLocation("shineDamper");
+        location_reflectivity = super.getUniformLocation("reflectivity");
+    }
+
+    /**
+     * Load the shine variables into the Uniform Variables in the fragment shader
+     * The shine variables will determine how reflective and "shinny" the model will be.
+     *
+     * @param damper - Determines how much "scatter" a reflective surface has. The more scatter, the further away
+     *                 the camera can be from the surface normal and still pick up reflected light.
+     * @param reflectivity - Represents how reflective a given surface is. A value of 0 means the surface reflects no
+     *                       light at all.
+     */
+    public void loadShineVariables(float damper, float reflectivity) {
+        super.loadFloat(location_shineDamper, damper);
+        super.loadFloat(location_reflectivity, reflectivity);
     }
 
     /**
@@ -53,7 +71,7 @@ public class StaticShader extends ShaderProgram {
     }
 
     /**
-     * Load the Camera view matrix into the Unifrom Variable in the shader
+     * Load the Camera view matrix into the Uniform Variable in the shader
      * @param camera-The camera containing the view to be loaded into the shader
      */
     public void loadViewMatrix(Camera camera) {
