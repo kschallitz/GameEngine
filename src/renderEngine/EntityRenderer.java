@@ -16,26 +16,15 @@ import java.util.Map;
 /**
  * Created by Kurt on 6/25/2017.
  */
-public class Renderer {
-
-    private static final float FOV = 70;            // Field of view for camera projections
-    private static final float NEAR_PLANE = 0.1f;   // Near plane distance from camera
-    private static final float FAR_PLANE = 100f;    // Far plane distance from camera
-
-    private Matrix4f projectionMatrix;
+public class EntityRenderer {
     private StaticShader shader;
 
     /**
-     * Default constructor for Renderer
+     * Default constructor for EntityRenderer
      * Sets up the projection
      */
-    public Renderer(StaticShader shader) {
+    public EntityRenderer(StaticShader shader, Matrix4f projectionMatrix) {
         this.shader = shader;
-
-        GL11.glEnable(GL11.GL_CULL_FACE);
-        GL11.glEnable(GL11.GL_BACK);
-
-        createProjectionMatrix();
 
         // It is a static shader, so we will only ever need to load up the projection matrix into the shader once.
         shader.start();
@@ -99,31 +88,6 @@ public class Renderer {
 
         // Load the transformation matrix into the shader
         shader.loadTransformationMatrix(transformationMatrix);
-    }
-
-    /**
-     * Prepare the screen for the next frame
-     * Currently sets the background to red.
-     */
-    public void prepare() {
-        GL11.glEnable(GL11.GL_DEPTH_TEST);
-        GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
-        GL11.glClearColor(.5f, 0, .1f, 1);
-    }
-
-    private void createProjectionMatrix() {
-        float aspectRatio = (float) Display.getWidth() / (float) Display.getHeight();
-        float y_scale = (float) ((1f / Math.tan(Math.toRadians(FOV / 2f))) * aspectRatio);
-        float x_scale = y_scale / aspectRatio;
-        float frustum_length = FAR_PLANE - NEAR_PLANE;
-
-        projectionMatrix = new Matrix4f();
-        projectionMatrix.m00 = x_scale;
-        projectionMatrix.m11 = y_scale;
-        projectionMatrix.m22 = -((FAR_PLANE + NEAR_PLANE) / frustum_length);
-        projectionMatrix.m23 = -1;
-        projectionMatrix.m32 = -((2 * NEAR_PLANE * FAR_PLANE) / frustum_length);
-        projectionMatrix.m33 = 0;
     }
 }
 
