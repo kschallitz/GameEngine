@@ -62,11 +62,13 @@ public class OBJLoader {
                     line = reader.readLine();
                     continue;
                 }
+                line = line.substring(1, line.length());
+                line = line.trim();
 
                 String[] currentLine = line.split(" ");
-                String[] vertex1 = currentLine[1].split("/");
-                String[] vertex2 = currentLine[2].split("/");
-                String[] vertex3 = currentLine[3].split("/");
+                String[] vertex1 = currentLine[0].split("/");
+                String[] vertex2 = currentLine[1].split("/");
+                String[] vertex3 = currentLine[2].split("/");
 
                 processVertex(vertex1, indices, textures, normals, texturesArray, normalsArray);
                 processVertex(vertex2, indices, textures, normals, texturesArray, normalsArray);
@@ -116,21 +118,26 @@ public class OBJLoader {
     private static void processVertex(String[] vertexData, List<Integer> indices, List<Vector2f> textures,
                                       List<Vector3f> normals, float[] textureArray, float[] normalArray) {
 
-        // Remember to convert to zero based index.
-        int currentVertexPointer = Integer.parseInt(vertexData[0]) - 1;
-        indices.add(currentVertexPointer);
+        try {
+            // Remember to convert to zero based index.
+            int currentVertexPointer = Integer.parseInt(vertexData[0]) - 1;
+            indices.add(currentVertexPointer);
 
-        Vector2f currentTex = textures.get(Integer.parseInt( vertexData[1]) -1 );
+            Vector2f currentTex = textures.get(Integer.parseInt(vertexData[1]) - 1);
 
-        textureArray[currentVertexPointer * 2] = currentTex.x;
+            textureArray[currentVertexPointer * 2] = currentTex.x;
 
-        // Need to subtract from 1 because OpenGL starts from top left, blender starts from bottom left.
-        textureArray[currentVertexPointer * 2 + 1] = 1 - currentTex.y;
+            // Need to subtract from 1 because OpenGL starts from top left, blender starts from bottom left.
+            textureArray[currentVertexPointer * 2 + 1] = 1 - currentTex.y;
 
-        Vector3f currentNorm = normals.get(Integer.parseInt(vertexData[2]) - 1);
-        normalArray[currentVertexPointer * 3 + 0] = currentNorm.x;
-        normalArray[currentVertexPointer * 3 + 1] = currentNorm.y;
-        normalArray[currentVertexPointer * 3 + 2] = currentNorm.z;
-
+            Vector3f currentNorm = normals.get(Integer.parseInt(vertexData[2]) - 1);
+            normalArray[currentVertexPointer * 3 + 0] = currentNorm.x;
+            normalArray[currentVertexPointer * 3 + 1] = currentNorm.y;
+            normalArray[currentVertexPointer * 3 + 2] = currentNorm.z;
+        }
+        catch (NumberFormatException e)
+        {
+            e.printStackTrace();
+        }
     }
 }

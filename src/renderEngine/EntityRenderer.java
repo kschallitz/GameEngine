@@ -38,6 +38,7 @@ public class EntityRenderer {
             List<Entity> batch = entities.get(model);
             for (Entity entity : batch) {
                 prepareInstance(entity);
+
                 // Render it! Tell the draw engine that we will be rendering triangles
                 GL11.glDrawElements(GL11.GL_TRIANGLES, model.getRawModel().getVertexCount(),
                         GL11.GL_UNSIGNED_INT, 0);
@@ -63,6 +64,13 @@ public class EntityRenderer {
         // Get specular lighting info - reflectivity values from our textured model
         ModelTexture texture = model.getTexture();
 
+        if (texture.isHasTransparancy()) {
+            MasterRenderer.disableCulling();
+        }
+
+        // If the texture uses fake lighting (set all its normals straight up), then set it now.
+        shader.loadFakeLighting(texture.isUseFakeLighting());
+
         // Load the reflectivity values into the shader for specular lighting before we render
         shader.loadShineVariables(texture.getShineDamper(), texture.getReflectivity());
 
@@ -72,6 +80,8 @@ public class EntityRenderer {
     }
 
     private void unbindTexturedModel() {
+        MasterRenderer.enableCulling();
+
         // We have finished using everyting, so Disable the attribute list
         GL20.glDisableVertexAttribArray(0);
         GL20.glDisableVertexAttribArray(1);
