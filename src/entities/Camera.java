@@ -15,34 +15,44 @@ public class Camera {
     public Camera(){};
 
     public void move() {
+        // Adjust camera pitch
+        if (Keyboard.isKeyDown(Keyboard.KEY_W)) {
+            pitch -= 0.3f;
+        }
+        if (Keyboard.isKeyDown(Keyboard.KEY_X)) {
+            pitch += 0.3f;
+        }
+
+        // Adjust camera Yaw
+        if (Keyboard.isKeyDown(Keyboard.KEY_A)) {
+            yaw -= 0.3f;
+        }
+        if (Keyboard.isKeyDown(Keyboard.KEY_D)) {
+            yaw += 0.3f;
+        }
+
         // Zoom in / out on Z axis
         if (Keyboard.isKeyDown(Keyboard.KEY_UP)) {
-            //position.z -= 0.05;
-            position.z -= 1;
+            position.z -= .5f;
         }
         if (Keyboard.isKeyDown(Keyboard.KEY_DOWN)) {
-            //position.z += 0.05f;
-            position.z += 1;
+            position.z += .5f;
         }
 
         // Move camera left / right
         if (Keyboard.isKeyDown(Keyboard.KEY_RIGHT)) {
-            //position.x += 0.05f;
-            position.x += 1;
+            position.x += .5f;
         }
         if (Keyboard.isKeyDown(Keyboard.KEY_LEFT)) {
-            //position.x -= 0.05f;
-            position.x -= 1;
+            position.x -= .5f;
         }
 
         // Move camera up / down
         if (Keyboard.isKeyDown(Keyboard.KEY_HOME)) {
-            //position.y += 0.05f;
-            position.y += 0.02f;
+            position.y += 0.5f;
         }
         if (Keyboard.isKeyDown(Keyboard.KEY_END)) {
-            //position.y -= 0.05f;
-            position.y -= 0.02f;
+            position.y -= 0.5f;
         }
         if (Keyboard.isKeyDown(Keyboard.KEY_ESCAPE))
         {
