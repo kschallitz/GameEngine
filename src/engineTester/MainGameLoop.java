@@ -5,6 +5,8 @@ import entities.Entity;
 import entities.Light;
 import models.RawModel;
 import models.TexturedModel;
+import objConverter.ModelData;
+import objConverter.OBJFileLoader;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.util.vector.Vector3f;
 import renderEngine.DisplayManager;
@@ -13,6 +15,8 @@ import renderEngine.MasterRenderer;
 import renderEngine.OBJLoader;
 import terrains.Terrain;
 import textures.ModelTexture;
+import textures.TerrainTexture;
+import textures.TerrainTexturePack;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,8 +34,15 @@ public class MainGameLoop {
         RawModel model = OBJLoader.loadObjModel("tree", loader);
 
         // GAME OBJECTS
-        TexturedModel tikiHead = new TexturedModel(OBJLoader.loadObjModel("Moai1", loader),
-                new ModelTexture(loader.loadTexture("SeamlessStoneTexture")));
+//        TexturedModel tikiHead = new TexturedModel(OBJLoader.loadObjModel("Moai1", loader),
+//                new ModelTexture(loader.loadTexture("SeamlessStoneTexture")));
+//
+        ModelData tikiHeadData = OBJFileLoader.loadOBJ("Moai1");
+        RawModel tikiHeadRaw = loader.loadToVAO(tikiHeadData.getVertices(), tikiHeadData.getTextureCoords(), tikiHeadData.getNormals(),
+                tikiHeadData.getIndices());
+        TexturedModel tikiHead = new TexturedModel(tikiHeadRaw,
+                new ModelTexture(loader.loadTexture(("SeamlessStoneTexture"))));
+
         tikiHead.getTexture().setHasTransparancy(true);
         tikiHead.getTexture().setUseFakeLighting(true);
         Entity tikiHeadEntity = new Entity(tikiHead, new Vector3f( 50, -0.5f, 50), 0, 0, 0, 5f);
@@ -39,8 +50,13 @@ public class MainGameLoop {
         // GAME PIECES
         TexturedModel navigator = new TexturedModel(OBJLoader.loadObjModel("navigator", loader),
                 new ModelTexture(loader.loadTexture("white")));
+//        ModelData navigatorData = OBJFileLoader.loadOBJ("navigator");
+//        RawModel navigatorRaw = loader.loadToVAO(navigatorData.getVertices(), navigatorData.getTextureCoords(),
+//                navigatorData.getNormals(), navigatorData.getIndices());
+//        TexturedModel navigator = new TexturedModel(navigatorRaw,
+//                new ModelTexture(loader.loadTexture("white")));
 
-        // TERRAIN
+        // TERRAIN OBJECTS
         TexturedModel tree = new TexturedModel(model, new ModelTexture(loader.loadTexture("tree")));
 
         TexturedModel lolipopTree = new TexturedModel(OBJLoader.loadObjModel("lowPolyTree", loader),
@@ -82,8 +98,21 @@ public class MainGameLoop {
         texture.setReflectivity(1);
 
         Light light = new Light(new Vector3f(200, 200, 100), new Vector3f(1, 1, 1));
-        Terrain terrain1 = new Terrain(0, 0, loader, new ModelTexture(loader.loadTexture("grass")));
-        Terrain terrain2 = new Terrain(1, 0, loader, new ModelTexture(loader.loadTexture("grass")));
+
+
+        // *********************************** TERRAIN TEXTURE STUFF ********************************************
+        TerrainTexture backgroundTexture = new TerrainTexture(loader.loadTexture("grassy"));
+        TerrainTexture rTexture = new TerrainTexture(loader.loadTexture("dirt"));
+        TerrainTexture gTexture = new TerrainTexture(loader.loadTexture("pinkFlowers"));
+        TerrainTexture bTexture = new TerrainTexture(loader.loadTexture("path"));
+
+        TerrainTexturePack texturePack = new TerrainTexturePack(backgroundTexture, rTexture, gTexture, bTexture);
+        TerrainTexture blendMap = new TerrainTexture(loader.loadTexture("blendMap"));
+        // *********************************** TERRAIN TEXTURE STUFF ********************************************
+//        Terrain terrain1 = new Terrain(0, 0, loader, new ModelTexture(loader.loadTexture("grass")));
+//        Terrain terrain2 = new Terrain(1, 0, loader, new ModelTexture(loader.loadTexture("grass")));
+        Terrain terrain1 = new Terrain(0, 0, loader, texturePack, blendMap);
+        Terrain terrain2 = new Terrain(1, 0, loader, texturePack, blendMap);
 
         Camera camera = new Camera();
 
