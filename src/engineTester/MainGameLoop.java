@@ -3,6 +3,7 @@ package engineTester;
 import entities.Camera;
 import entities.Entity;
 import entities.Light;
+import entities.Player;
 import models.RawModel;
 import models.TexturedModel;
 import objConverter.ModelData;
@@ -50,11 +51,9 @@ public class MainGameLoop {
         // GAME PIECES
         TexturedModel navigator = new TexturedModel(OBJLoader.loadObjModel("navigator", loader),
                 new ModelTexture(loader.loadTexture("white")));
-//        ModelData navigatorData = OBJFileLoader.loadOBJ("navigator");
-//        RawModel navigatorRaw = loader.loadToVAO(navigatorData.getVertices(), navigatorData.getTextureCoords(),
-//                navigatorData.getNormals(), navigatorData.getIndices());
-//        TexturedModel navigator = new TexturedModel(navigatorRaw,
-//                new ModelTexture(loader.loadTexture("white")));
+
+        Player player = new Player(navigator, new Vector3f( 5, 1.5f, 5), -90, 0, 90, .5f);
+
 
         // TERRAIN OBJECTS
         TexturedModel tree = new TexturedModel(model, new ModelTexture(loader.loadTexture("tree")));
@@ -119,11 +118,14 @@ public class MainGameLoop {
         MasterRenderer renderer = new MasterRenderer();
         while (!Display.isCloseRequested()) {
             camera.move();
+            player.move();
+
             renderer.processTerrain(terrain1);
             renderer.processTerrain(terrain2);
 
             // Game pieces
-            renderer.processEntity(new Entity(navigator, new Vector3f( 5, 1.5f, 5), -90, 0, 90, .5f));
+            renderer.processEntity(player);
+            // renderer.processEntity(new Entity(navigator, new Vector3f( 5, 1.5f, 5), -90, 0, 90, .5f));
 
             // Game Objects
             tikiHeadEntity.increaseRotation(0, 1, 0);
