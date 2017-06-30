@@ -17,8 +17,8 @@ uniform vec3 lightPosition;
 
 uniform float useFakeLighting;      // 0 if we should not use fake lighting, 1 to use it.
 
-const float density = 0.02;
-const float gradient = 1.5;
+const float density = 0.002;
+const float gradient = 3.5;
 
 void main(void) {
 
@@ -39,4 +39,6 @@ void main(void) {
     float distance = length(positionRelativeToCamera.xyz);
     visibility = exp(-pow((distance * density), gradient));
     visibility = clamp(visibility, 0.0, 1.0);
+    // Ignore fog effect:
+    visibility = 1.0;
 }
