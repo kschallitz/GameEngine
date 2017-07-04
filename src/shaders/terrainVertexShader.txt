@@ -15,8 +15,8 @@ uniform mat4 projectionMatrix;
 uniform mat4 viewMatrix;            // Contains the NEGATIVE value of the camera's position
 uniform vec3 lightPosition;
 
-const float density = 0.003;
-const float gradient = 3.5;
+const float density = 0.007;
+const float gradient = 1.5;
 
 void main(void) {
 
@@ -30,6 +30,6 @@ void main(void) {
     toCameraVector = (inverse(viewMatrix) * vec4(0.0, 0.0, 0.0, 1.0)).xyz - worldPosition.xyz; // Camera position - vertices position
 
     float distance = length(positionRelativeToCamera.xyz);
-    visibility = exp(-pow((distance * density), gradient));
+    visibility = 1.0; // exp(-pow((distance * density), gradient));
     visibility = clamp(visibility, 0.0, 1.0);
 }

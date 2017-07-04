@@ -35,9 +35,6 @@ public class MainGameLoop {
         RawModel model = OBJLoader.loadObjModel("tree", loader);
 
         // GAME OBJECTS
-//        TexturedModel tikiHead = new TexturedModel(OBJLoader.loadObjModel("Moai1", loader),
-//                new ModelTexture(loader.loadTexture("SeamlessStoneTexture")));
-//
         ModelData tikiHeadData = OBJFileLoader.loadOBJ("Moai1");
         RawModel tikiHeadRaw = loader.loadToVAO(tikiHeadData.getVertices(), tikiHeadData.getTextureCoords(), tikiHeadData.getNormals(),
                 tikiHeadData.getIndices());
@@ -53,7 +50,6 @@ public class MainGameLoop {
                 new ModelTexture(loader.loadTexture("white")));
 
         Player player = new Player(navigator, new Vector3f( 5, 1.5f, 5), -90, 0, 90, .5f);
-
 
         // TERRAIN OBJECTS
         TexturedModel tree = new TexturedModel(model, new ModelTexture(loader.loadTexture("tree")));
@@ -110,15 +106,16 @@ public class MainGameLoop {
         // *********************************** TERRAIN TEXTURE STUFF ********************************************
 //        Terrain terrain1 = new Terrain(0, 0, loader, new ModelTexture(loader.loadTexture("grass")));
 //        Terrain terrain2 = new Terrain(1, 0, loader, new ModelTexture(loader.loadTexture("grass")));
-        Terrain terrain1 = new Terrain(0, 0, loader, texturePack, blendMap);
-        Terrain terrain2 = new Terrain(1, 0, loader, texturePack, blendMap);
+        Terrain terrain1 = new Terrain(0, 0, loader, texturePack, blendMap, "heightMap");
+        Terrain terrain2 = new Terrain(1, 0, loader, texturePack, blendMap, "heightMap");
 
-        Camera camera = new Camera();
+        // This MUST be done AFTER the player is created
+        Camera camera = new Camera(player);
 
         MasterRenderer renderer = new MasterRenderer();
         while (!Display.isCloseRequested()) {
             camera.move();
-            player.move();
+            player.move(terrain1);
 
             renderer.processTerrain(terrain1);
             renderer.processTerrain(terrain2);

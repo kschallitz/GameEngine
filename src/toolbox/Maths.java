@@ -2,12 +2,34 @@ package toolbox;
 
 import entities.Camera;
 import org.lwjgl.util.vector.Matrix4f;
+import org.lwjgl.util.vector.Vector2f;
 import org.lwjgl.util.vector.Vector3f;
 
 /**
  * Created by Kurt on 6/26/2017.
  */
 public class Maths {
+
+    /**
+     * Computes the height at player position, given heights of the three verticies of the triangle
+     * see: https://en.wikipedia.org/wiki/Barycentric_coordinate_system
+     *
+     * @param p1 vertex one position
+     * @param p2 vertex two position
+     * @param p3 vertex three position
+     * @param pos player x, y position within the triangle
+     *
+     * @return the float representing the player's height at the given coordinates within the triangle specificed by
+     *         p1, p2, p3
+     */
+    public static float barryCentric(Vector3f p1, Vector3f p2, Vector3f p3, Vector2f pos) {
+        float det = ((p2.z - p3.z) * (p1.x - p3.x)) + ((p3.x - p2.x) * (p1.z - p3.z));
+        float l1 = ((p2.z - p3.z) * (pos.x - p3.x)) + ((p3.x - p2.x) * (pos.y - p3.z)) / det;
+        float l2 = ((p3.z - p1.z) * (pos.x - p3.x)) + ((p1.x - p3.x) * (pos.y - p3.z)) / det;
+        float l3 = 1.0f - l1 - l2;
+
+        return (l1 * p1.y) + (l2 * p2.y) + (l3 * p3.y);
+    }
 
     /**
      * Convert a 3float translation, rotation and scale into a 4 float Matrix
