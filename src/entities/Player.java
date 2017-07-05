@@ -5,12 +5,16 @@ import org.lwjgl.input.Keyboard;
 import org.lwjgl.util.vector.Vector3f;
 import renderEngine.DisplayManager;
 import terrains.Terrain;
+import terrains.TerrainManager;
 
 /**
  * Created by Kurt on 6/30/2017.
  */
 public class Player extends Entity {
-    
+    private static final float PLAYER_COG_X = 2.0f;
+    private static final float PLAYER_COG_Y = 1.5f;
+    private static final float PLAYER_COG_Z = 5.0f;
+
     private static final float RUN_SPEED = 20f;       // Units / second
     private static final float TURN_SPEED = 160f;     // Degrees / second
 
@@ -32,7 +36,11 @@ public class Player extends Entity {
         float distance = currentSpeed * DisplayManager.getFrameTimeSeconds();
         float dx = (float) Math.sin(Math.toRadians(super.getRotZ())) * distance;
         float dz = (float) Math.cos(Math.toRadians(super.getRotZ())) * distance;
-        super.increasePosition(dx, 0, dz);
+
+        // determine if the new position maps to a valid terrain
+        if (TerrainManager.isValidPosition(getPosition().x + dx, getPosition().z + dz)) {
+            super.increasePosition(dx, 0, dz);
+        }
 
         upwardSpeed += GRAVITY * DisplayManager.getFrameTimeSeconds();
         float increaseUp = upwardSpeed * DisplayManager.getFrameTimeSeconds();
@@ -40,10 +48,11 @@ public class Player extends Entity {
 
         float yPos = super.getPosition().getY();
 
-        float terrainHeight = terrain.getHeightOfTerrain(super.getPosition().x, super.getPosition().z);
-        if (yPos < terrainHeight + 1.5f) {
+        // Check for terrain collision
+        float terrainHeight = terrain.getHeightOfTerrain(super.getPosition().x, super.getPosition().z) + PLAYER_COG_Y;
+        if (yPos < terrainHeight) {
             upwardSpeed = 0;
-            super.getPosition().y = terrainHeight + 1.5f;
+            super.getPosition().y = terrainHeight;
             inAir = false;
         }
     }

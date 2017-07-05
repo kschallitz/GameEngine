@@ -60,7 +60,7 @@ public class MasterRenderer {
     /**
      * Render the game!
      *
-     * @param sun - The light source object
+     * @param sun    - The light source object
      * @param camera - The camera object
      */
     public void render(Light sun, Camera camera) {
@@ -115,6 +115,9 @@ public class MasterRenderer {
     }
 
     public void processTerrain(Terrain terrain) {
+        if (terrain == null) {
+            return;
+        }
         terrains.add(terrain);
     }
 
@@ -123,9 +126,7 @@ public class MasterRenderer {
         List<Entity> batch = entities.get(entityModel);
         if (batch != null) {
             batch.add(entity);
-        }
-        else
-        {
+        } else {
             List<Entity> newBatch = new ArrayList<>();
             newBatch.add(entity);
             entities.put(entityModel, newBatch);

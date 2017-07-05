@@ -15,13 +15,12 @@ import renderEngine.Loader;
 import renderEngine.MasterRenderer;
 import renderEngine.OBJLoader;
 import terrains.Terrain;
+import terrains.TerrainManager;
 import textures.ModelTexture;
 import textures.TerrainTexture;
 import textures.TerrainTexturePack;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 /**
  * Created by Kurt on 6/25/2017.
@@ -72,29 +71,6 @@ public class MainGameLoop {
         fern.getTexture().setHasTransparancy(true);
         fern.getTexture().setUseFakeLighting(true);
 
-        List<Entity> entities = new ArrayList<>();
-        Random random = new Random();
-        for (int i = 0; i < 1500; i++) {
-
-            entities.add(new Entity(tree, new Vector3f(random.nextFloat() * 1600, 0,
-                    random.nextFloat() * 800), 0, 0, 0, random.nextFloat() * 5 - .5f));
-            entities.add(new Entity(lolipopTree, new Vector3f(random.nextFloat() * 1600, 0,
-                    random.nextFloat() * 800), 0, 0, 0, random.nextFloat()* 0.5f));
-            entities.add(new Entity(grass, new Vector3f(random.nextFloat() * 1600 + 10f, 0,
-                    random.nextFloat() * 800), 0, 0, 0, 1));
-            entities.add(new Entity(flower, new Vector3f(random.nextFloat() * 1600 + 10f, 0,
-                    random.nextFloat() * 800), 0, 0, 0, 1));
-            entities.add(new Entity(fern, new Vector3f(random.nextFloat() * 1600, 0,
-                    random.nextFloat() * 800), 0, 0, 0, 0.6f));
-        }
-
-        ModelTexture texture = tree.getTexture();
-        texture.setShineDamper(20);
-        texture.setReflectivity(1);
-
-        Light light = new Light(new Vector3f(200, 200, 100), new Vector3f(1, 1, 1));
-
-
         // *********************************** TERRAIN TEXTURE STUFF ********************************************
         TerrainTexture backgroundTexture = new TerrainTexture(loader.loadTexture("grassy"));
         TerrainTexture rTexture = new TerrainTexture(loader.loadTexture("dirt"));
@@ -103,11 +79,39 @@ public class MainGameLoop {
 
         TerrainTexturePack texturePack = new TerrainTexturePack(backgroundTexture, rTexture, gTexture, bTexture);
         TerrainTexture blendMap = new TerrainTexture(loader.loadTexture("blendMap"));
-        // *********************************** TERRAIN TEXTURE STUFF ********************************************
-//        Terrain terrain1 = new Terrain(0, 0, loader, new ModelTexture(loader.loadTexture("grass")));
-//        Terrain terrain2 = new Terrain(1, 0, loader, new ModelTexture(loader.loadTexture("grass")));
-        Terrain terrain1 = new Terrain(0, 0, loader, texturePack, blendMap, "heightMap");
-        Terrain terrain2 = new Terrain(1, 0, loader, texturePack, blendMap, "heightMap");
+
+        // *********************************** TERRAIN  ********************************************
+        TerrainManager terrainManager = new TerrainManager();
+        terrainManager.add(0, 0, new Terrain(0, 0, loader, texturePack, blendMap, "heightMap"));
+        terrainManager.add(0, 1, new Terrain(1, 0, loader, texturePack, blendMap, "heightMap"));
+
+        List<Entity> entities = new ArrayList<>();
+        Random random = new Random();
+        float x;
+        float z;
+        for (int i = 0; i < 1500; i++) {
+            x = random.nextFloat() * 1600;
+            z = random.nextFloat() * 800;
+            entities.add(new Entity(tree, new Vector3f(x, terrainManager.getHeightAtPosition(x, z), z), 0, 0, 0, random.nextFloat() * 5 - .5f));
+            x = random.nextFloat() * 1600;
+            z = random.nextFloat() * 800;
+            entities.add(new Entity(lolipopTree, new Vector3f(x, terrainManager.getHeightAtPosition(x, z), z), 0, 0, 0, random.nextFloat()* 0.5f));
+            x = random.nextFloat() * 1600;
+            z = random.nextFloat() * 800;
+            entities.add(new Entity(grass, new Vector3f(x, terrainManager.getHeightAtPosition(x, z), z), 0, 0, 0, 1));
+            x = random.nextFloat() * 1600;
+            z = random.nextFloat() * 800;
+            entities.add(new Entity(flower, new Vector3f(x, terrainManager.getHeightAtPosition(x, z), z),0, 0, 0, 1));
+            x = random.nextFloat() * 1600;
+            z = random.nextFloat() * 800;
+            entities.add(new Entity(fern, new Vector3f(x, terrainManager.getHeightAtPosition(x, z), z),  0, 0, 0, 0.6f));
+        }
+
+        ModelTexture texture = tree.getTexture();
+        texture.setShineDamper(20);
+        texture.setReflectivity(1);
+
+        Light light = new Light(new Vector3f(200, 200, 100), new Vector3f(1, 1, 1));
 
         // This MUST be done AFTER the player is created
         Camera camera = new Camera(player);
@@ -115,10 +119,22 @@ public class MainGameLoop {
         MasterRenderer renderer = new MasterRenderer();
         while (!Display.isCloseRequested()) {
             camera.move();
-            player.move(terrain1);
+            int mapZ = (int)Math.floor(player.getPosition().z / Terrain.SIZE); // Row
+            int mapX = (int)Math.floor(player.getPosition().x / Terrain.SIZE); // Col
+            Terrain terrain = terrainManager.get(mapZ, mapX);
 
-            renderer.processTerrain(terrain1);
-            renderer.processTerrain(terrain2);
+            player.move(terrain);
+
+            // Render Terrains around player
+            renderer.processTerrain(terrain);
+            renderer.processTerrain(terrainManager.get(mapZ- 1, mapX));
+            renderer.processTerrain(terrainManager.get(mapZ + 1, mapX));
+            renderer.processTerrain(terrainManager.get(mapZ, mapX - 1));
+            renderer.processTerrain(terrainManager.get(mapZ, mapX + 1));
+            renderer.processTerrain(terrainManager.get(mapZ + 1, mapX + 1));
+            renderer.processTerrain(terrainManager.get(mapZ + 1, mapX - 1));
+            renderer.processTerrain(terrainManager.get(mapZ - 1, mapX + 1));
+            renderer.processTerrain(terrainManager.get(mapZ - 1, mapX - 1));
 
             // Game pieces
             renderer.processEntity(player);
