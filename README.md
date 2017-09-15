@@ -1,6 +1,6 @@
 # GameEngine
 #
-# This is just me dabbling with LWJGL based on an great on-line tutorial I found last year.
+# This is just me dabbling with LWJGL based on ThinMatrix.
 
 # The plan is to make a 3D version of the board game: Tobago.
 # However, to make the game interactive and real-time, I've had to change a number of things.
