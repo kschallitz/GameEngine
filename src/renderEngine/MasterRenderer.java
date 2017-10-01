@@ -55,7 +55,7 @@ public class MasterRenderer {
     /**
      * Render the game!
      *
-     * @param sun    - The light source object
+     * @param lights    - The light source object
      * @param camera - The camera object
      */
     public void render(List<Light> lights, Camera camera) {
@@ -66,7 +66,7 @@ public class MasterRenderer {
         shader.loadViewMatrix(camera);
         renderer.render(entities);
         shader.stop();
-        skyboxRenderer.render(camera);
+        skyboxRenderer.render(camera, RED, GREEN, BLUE);
         entities.clear();
 
         terrainShader.start();
