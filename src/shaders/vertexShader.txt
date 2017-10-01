@@ -6,26 +6,28 @@ in vec3 normal;
 
 out vec2 pass_textureCoordinates;
 out vec3 surfaceNormal;
-out vec3 toLightVector;
+out vec3 toLightVector[4];
 out vec3 toCameraVector;            // For Specular Lighting
 out float visibility;
 
 uniform mat4 transformationMatrix;
 uniform mat4 projectionMatrix;
 uniform mat4 viewMatrix;            // Contains the NEGATIVE value of the camera's position
-uniform vec3 lightPosition;
-
+uniform vec3 lightPosition[4];
 uniform float useFakeLighting;      // 0 if we should not use fake lighting, 1 to use it.
 
-const float density = 0.007;
-const float gradient = 1.5;
+uniform float numberOfRows;         // Number of rows in a texture atlas
+uniform vec2 offset;                // x, y offset within the texture atlas to get to current texture.
+
+const float density = 0.0035;
+const float gradient = 5.0;
 
 void main(void) {
 
     vec4 worldPosition = transformationMatrix * vec4(position, 1.0);
     vec4 positionRelativeToCamera = viewMatrix * worldPosition;
     gl_Position = projectionMatrix * positionRelativeToCamera;
-    pass_textureCoordinates = textureCoordinates;
+    pass_textureCoordinates = (textureCoordinates / numberOfRows) + offset;
 
     vec3 actualNormal = normal;
     if (useFakeLighting > 0.5) {
@@ -33,12 +35,12 @@ void main(void) {
     }
 
     surfaceNormal = (transformationMatrix * vec4(actualNormal, 0.0)).xyz;
-    toLightVector = lightPosition - worldPosition.xyz;
+    for (int i = 0; i < 4; i++) {
+        toLightVector[i] = lightPosition[i] - worldPosition.xyz;
+    }
     toCameraVector = (inverse(viewMatrix) * vec4(0.0, 0.0, 0.0, 1.0)).xyz - worldPosition.xyz; // Camera position - vertices position
 
     float distance = length(positionRelativeToCamera.xyz);
-    visibility = 1.0; //exp(-pow((distance * density), gradient));
+    visibility = exp(-pow((distance * density), gradient));
     visibility = clamp(visibility, 0.0, 1.0);
-    // Ignore fog effect:
-    visibility = 1.0;
 }

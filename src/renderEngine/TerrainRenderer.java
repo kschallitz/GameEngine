@@ -27,7 +27,7 @@ public class TerrainRenderer {
         shader.start();
         shader.loadProjectionMatrix(projectionMatrix);
         shader.connectTextureUnits();
-        shader.start();
+        shader.stop();
     }
 
     public void render(List<Terrain> terrains) {

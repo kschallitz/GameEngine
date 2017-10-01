@@ -11,6 +11,17 @@ public class ModelTexture {
     private boolean hasTransparancy = false;
     private boolean useFakeLighting = false;
 
+
+    private int numberOfRowsInAtlas = 1;
+
+    public int getNumberOfRowsInAtlas() {
+        return numberOfRowsInAtlas;
+    }
+
+    public void setNumberOfRowsInAtlas(int numberOfRowsInAtlas) {
+        this.numberOfRowsInAtlas = numberOfRowsInAtlas;
+    }
+
     public boolean isUseFakeLighting() {
         return useFakeLighting;
     }

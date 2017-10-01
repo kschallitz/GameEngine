@@ -29,7 +29,6 @@ public class OBJLoader {
             List<Vector3f> normals = new ArrayList<>();
             List<Integer> indices = new ArrayList<>();
 
-
             // read Vertecies, textures and normals
             while (true) {
                 line = reader.readLine();

@@ -2,7 +2,7 @@
 
 in vec2 pass_textureCoordinates;
 in vec3 surfaceNormal;
-in vec3 toLightVector;  //vector pointing to the light source
+in vec3 toLightVector[4];  //vector pointing to the light source
 in vec3 toCameraVector; //vector pointing to the camera
 in float visibility;    // Allow for fog and other visibility limiting effects.
 
@@ -14,7 +14,8 @@ uniform sampler2D gTexture;
 uniform sampler2D bTexture;
 uniform sampler2D blendMap;
 
-uniform vec3 lightColor;
+uniform vec3 lightColor[4];
+uniform vec3 attenuation[4];
 uniform float shineDamper;          // How much should reflected light scatter from the surface
 uniform float reflectivity;         // How reflective is the surface
 uniform vec3 skyColor;
@@ -22,6 +23,7 @@ uniform vec3 skyColor;
 void main(void) {
 
     vec4 blendMapColor = texture(blendMap, pass_textureCoordinates);
+    vec3 unitVectorToCamera = normalize(toCameraVector);                //Normalize the "to camera" vector to make sure size is 1
 
     float backTextureAmount = 1 - (blendMapColor.r + blendMapColor.g + blendMapColor.b);
     vec2 tiledCoordinates = pass_textureCoordinates * 40.0;
@@ -34,21 +36,29 @@ void main(void) {
 
 
     vec3 unitNormal = normalize(surfaceNormal);             //Normal of surface
-    vec3 unitLightNormal = normalize(toLightVector);        //Vector pointing TOWARD the light source
+    vec3 totalDiffuse = vec3(0.0);
+    vec3 totalSpecular = vec3(0.0);
 
-    float nDot1 = dot(unitNormal, unitLightNormal);
-    float brightness = max(nDot1, 0.2);                     // ensure that we never go fully black (no light)
-    vec3 diffuse = brightness * lightColor;
+    for (int i = 0; i < 4; i++) {
+        float distance = length(toLightVector[i]);
+        float atnFactor = attenuation[i].x + (attenuation[i].y * distance) + (attenuation[i].z * distance * distance);
+        vec3 unitLightNormal = normalize(toLightVector[i]);                     //Vector pointing TOWARD the light source
 
-    vec3 unitVectorToCamera = normalize(toCameraVector);                //Normalize the "to camera" vector to make sure size is 1
-    vec3 lightDirection = -unitLightNormal;                             //Vector pointing AWAY from the light source
-    vec3 reflectedLightDirection = reflect(lightDirection, unitNormal); // use built in reflect func to computer reflected light vector
+        vec3 lightDirection = -unitLightNormal;                                 //Vector pointing AWAY from the light source
+        vec3 reflectedLightDirection = reflect(lightDirection, unitNormal);     // use built in reflect func to computer reflected light vector
 
-    float specularFactor = dot(reflectedLightDirection, unitVectorToCamera);// Compute how much reflected light reaches camera
-    specularFactor = max(specularFactor, 0.0);                              // Can't have a negative brightneess
-    float dampedFactor = pow(specularFactor, shineDamper);                  // make lower spec values even lower without affecting upper values too much.
-    vec3 finalSpecular = dampedFactor * reflectivity * lightColor;          // Set the specular light to the color of the light source.
+        float specularFactor = dot(reflectedLightDirection, unitVectorToCamera);// Compute how much reflected light reaches camera
+        specularFactor = max(specularFactor, 0.0);                              // Can't have a negative brightneess
+        float dampedFactor = pow(specularFactor, shineDamper);                  // make lower spec values even lower without affecting upper values too much.
 
-    out_color = vec4(diffuse, 1.0) * totalColor + vec4(finalSpecular, 1.0);
+        float nDot1 = dot(unitNormal, unitLightNormal);
+        float brightness = max(nDot1, 0.0);
+        totalDiffuse = totalDiffuse + ((brightness * lightColor[i]) / atnFactor);
+
+        totalSpecular = totalSpecular + ((dampedFactor * reflectivity * lightColor[i]) / atnFactor);          // Set the specular light to the color of the light source.
+    }
+    totalDiffuse = max(totalDiffuse, 0.2);
+
+    out_color = vec4(totalDiffuse, 1.0) * totalColor + vec4(totalSpecular, 1.0);
     out_color = mix(vec4(skyColor, 1.0), out_color, visibility);
 }

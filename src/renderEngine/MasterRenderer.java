@@ -9,6 +9,7 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.Matrix4f;
 import shaders.StaticShader;
 import shaders.TerrainShader;
+import skyBox.SkyboxRenderer;
 import terrains.Terrain;
 
 import java.util.ArrayList;
@@ -22,11 +23,11 @@ import java.util.Map;
 public class MasterRenderer {
     private static final float FOV = 70;            // Field of view for camera projections
     private static final float NEAR_PLANE = 0.1f;   // Near plane distance from camera
-    private static final float FAR_PLANE = 100f;    // Far plane distance from camera
+    private static final float FAR_PLANE = 1000f;    // Far plane distance from camera
 
-    private static final float RED = 0.0f;
-    private static final float GREEN = 0.5f;
-    private static final float BLUE = 0.5f;
+    private static final float RED = 0.5444f;
+    private static final float GREEN = 0.62f;
+    private static final float BLUE = 0.69f;
 
     private Matrix4f projectionMatrix;
 
@@ -41,11 +42,40 @@ public class MasterRenderer {
     private Map<TexturedModel, List<Entity>> entities = new HashMap<>();
     private List<Terrain> terrains = new ArrayList<>();
 
-    public MasterRenderer() {
+    private SkyboxRenderer skyboxRenderer;
+
+    public MasterRenderer(Loader loader) {
         enableCulling();
         createProjectionMatrix();
         renderer = new EntityRenderer(shader, projectionMatrix);
         terrainRenderer = new TerrainRenderer(terrainShader, projectionMatrix);
+        skyboxRenderer = new SkyboxRenderer(loader, projectionMatrix);
+    }
+
+    /**
+     * Render the game!
+     *
+     * @param sun    - The light source object
+     * @param camera - The camera object
+     */
+    public void render(List<Light> lights, Camera camera) {
+        prepare();
+        shader.start();
+        shader.loadSkyColor(RED, GREEN, BLUE);
+        shader.loadLights(lights);
+        shader.loadViewMatrix(camera);
+        renderer.render(entities);
+        shader.stop();
+        skyboxRenderer.render(camera);
+        entities.clear();
+
+        terrainShader.start();
+        terrainShader.loadSkyColor(RED, GREEN, BLUE);
+        terrainShader.loadLights(lights);
+        terrainShader.loadViewMatrix(camera);
+        terrainRenderer.render(terrains);
+        terrainShader.stop();
+        terrains.clear();
     }
 
     public static void enableCulling() {
@@ -57,28 +87,17 @@ public class MasterRenderer {
         GL11.glDisable(GL11.GL_CULL_FACE);
     }
 
-    /**
-     * Render the game!
-     *
-     * @param sun    - The light source object
-     * @param camera - The camera object
-     */
-    public void render(Light sun, Camera camera) {
-        prepare();
-        shader.start();
-        shader.loadSkyColor(RED, GREEN, BLUE);
-        shader.loadLight(sun);
-        shader.loadViewMatrix(camera);
-        renderer.render(entities);
-        shader.stop();
-        entities.clear();
+    public void renderScene(List<Entity> entities, List<Terrain> terrains, List<Light> lights, Camera camera) {
 
-        terrainShader.start();
-        terrainShader.loadSkyColor(RED, GREEN, BLUE);
-        terrainShader.loadLight(sun);
-        terrainShader.loadViewMatrix(camera);
-        terrainRenderer.render(terrains);
-        terrains.clear();
+        for (Terrain terrain : terrains) {
+            processTerrain(terrain);
+        }
+
+        for (Entity entity : entities) {
+            processEntity(entity);
+        }
+
+        render(lights, camera);
     }
 
     /**

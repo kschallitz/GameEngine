@@ -13,6 +13,8 @@ public class Entity {
     private float rotX, rotY, rotZ;
     private float scale;
 
+    private int textureAtlasIndex = 0;
+
     public Entity(TexturedModel model, Vector3f position, float rotX, float rotY, float rotZ, float scale) {
         this.model = model;
         this.position = position;
@@ -20,6 +22,37 @@ public class Entity {
         this.rotY = rotY;
         this.rotZ = rotZ;
         this.scale = scale;
+    }
+
+    public Entity(TexturedModel model, int textureAtlasIndex, Vector3f position, float rotX, float rotY, float rotZ, float scale) {
+
+        this.model = model;
+        this.textureAtlasIndex = textureAtlasIndex;
+        this.position = position;
+        this.rotX = rotX;
+        this.rotY = rotY;
+        this.rotZ = rotZ;
+        this.scale = scale;
+    }
+
+    /**
+     * Calculates the xOffset (column) position of a texture in a texture atlas for the current entity.
+     *
+     * @return - Column (xOffset) of the texture map within a texture atlas for the current entity.
+     */
+    public float getTextureXOffset() {
+        float xOffset = textureAtlasIndex % model.getTexture().getNumberOfRowsInAtlas();
+        return (float)xOffset / (float)model.getTexture().getNumberOfRowsInAtlas();
+    }
+
+    /**
+     * Calculates the yOffset (row) position of a texture in a texture atlas for the current entity.
+     *
+     * @return
+     */
+    public float getTextureYOffset() {
+        float yOffset = textureAtlasIndex / model.getTexture().getNumberOfRowsInAtlas();
+        return (float)yOffset / (float)model.getTexture().getNumberOfRowsInAtlas();
     }
 
     /**

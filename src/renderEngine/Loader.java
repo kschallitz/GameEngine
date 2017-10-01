@@ -3,12 +3,16 @@ package renderEngine;
 import models.RawModel;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.*;
+import de.matthiasmann.twl.utils.PNGDecoder;
+import de.matthiasmann.twl.utils.PNGDecoder.Format;
 import org.newdawn.slick.opengl.Texture;
 import org.newdawn.slick.opengl.TextureLoader;
+import textures.TextureData;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
@@ -23,6 +27,14 @@ public class Loader {
     private List<Integer> vbos = new ArrayList<>();
     private List<Integer> textures = new ArrayList<>();
 
+    /**
+     * Main loader for 3D objects
+     * @param positions
+     * @param textureCoords
+     * @param normals
+     * @param indices
+     * @return
+     */
     public RawModel loadToVAO(float[] positions, float[] textureCoords, float[] normals, int[] indices) {
         int vaoID = createVAO();
         bindIndicesBuffer(indices);
@@ -40,6 +52,13 @@ public class Loader {
 
         // Don't need to use the length / 3 of the positions, now we can use the length of the indices buffer.
         return new RawModel(vaoID, indices.length);
+    }
+
+    public RawModel loadToVAO(float[] positions, int dimensions) {
+        int vaoID = createVAO();
+        this.storeDataInAttributeList(0, dimensions, positions);
+        unbindVAO();
+        return new RawModel(vaoID, positions.length / dimensions);
     }
 
     public int loadTexture(String fileName) {
@@ -75,6 +94,60 @@ public class Loader {
         for (int texture : textures) {
             GL11.glDeleteTextures(texture);
         }
+    }
+    public int loadCubeMap(String[] textureFiles) {
+        int textID = GL11.glGenTextures();
+        GL13.glActiveTexture(GL13.GL_TEXTURE0);
+        GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, textID);
+
+        for (int i = 0; i < textureFiles.length; i++) {
+            TextureData data = decodeTextureFile("res/" + textureFiles[i] + ".png");
+            GL11.glTexImage2D(
+                    // NOTE - map images must be in order starting with MAP_POSITIVE_X
+                    GL13.GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+                    0,
+                    GL11.GL_RGBA,
+                    data.getWidth(),
+                    data.getHeight(),
+                    0,
+                    GL11.GL_RGBA,
+                    GL11.GL_UNSIGNED_BYTE,
+                    data.getBuffer()
+            );
+
+            GL11.glTexParameteri(GL13.GL_TEXTURE_CUBE_MAP, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+            GL11.glTexParameteri(GL13.GL_TEXTURE_CUBE_MAP, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+        }
+
+        textures.add(textID);
+        return textID;
+    }
+
+    private TextureData decodeTextureFile(String fileName) {
+        int width = 0;
+        int height = 0;
+        ByteBuffer buffer = null;
+
+        try {
+            FileInputStream f = new FileInputStream(fileName);
+            PNGDecoder decoder = new PNGDecoder(f);
+            width = decoder.getWidth();
+            height = decoder.getHeight();
+            buffer = ByteBuffer.allocateDirect(width * height * 4);
+            decoder.decode(buffer, width * 4, Format.RGBA);
+            buffer.flip();
+            f.close();
+        }
+        catch (FileNotFoundException fnfe) {
+            System.out.println("File Not Found Error in TextureData: " + fileName);
+            System.exit(-1);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Tried to load texture " + fileName + ", didn't work.");
+            System.exit(-1);
+        }
+        return new TextureData(buffer, width, height);
     }
 
     private int createVAO() {
@@ -137,5 +210,4 @@ public class Loader {
 
         return buffer;
     }
-
 }

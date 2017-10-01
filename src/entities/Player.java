@@ -55,7 +55,25 @@ public class Player extends Entity {
             super.getPosition().y = terrainHeight;
             inAir = false;
         }
+
+        // Determine if we need to rotate the player based on terrain slope
+        float terrainHeightRear = terrain.getHeightOfTerrain(super.getPosition().x - 10f, super.getPosition().z);
+        float terrainHeightFront = terrain.getHeightOfTerrain(super.getPosition().x + 10f, super.getPosition().z);
+        float terrainHeightLeft =  terrain.getHeightOfTerrain(super.getPosition().x, super.getPosition().z - 5f);
+        float terrainHeightRight = terrain.getHeightOfTerrain(super.getPosition().x, super.getPosition().z + 5f);
+
+        // Change player's rotation to match slope of terrain
+        float theta;
+        if (terrainHeightRear != terrainHeightFront) {
+            theta = (float)Math.toDegrees(Math.atan((terrainHeightRear - terrainHeightFront)/20f));
+            super.setRotY(theta);
+        }
+        if (terrainHeightLeft != terrainHeightRight) {
+            theta = (float)Math.toDegrees(Math.atan((terrainHeightLeft - terrainHeightRight)/10f));
+            super.setRotX(-90.0f + theta); // Add to -90 because our player model, by default, is rotated -90 on x
+        }
     }
+
     private void jump() {
         upwardSpeed = JUMP_POWER;
     }
@@ -71,9 +89,13 @@ public class Player extends Entity {
         }
 
         // Move camera left / right
-        if (Keyboard.isKeyDown(Keyboard.KEY_RIGHT)) {
+        if (Keyboard.isKeyDown(Keyboard.KEY_RIGHT) && (
+                Keyboard.isKeyDown(Keyboard.KEY_UP) || Keyboard.isKeyDown(Keyboard.KEY_DOWN)
+                )) {
             currentTurnSpeed = -TURN_SPEED;
-        } else if (Keyboard.isKeyDown(Keyboard.KEY_LEFT)) {
+        } else if (Keyboard.isKeyDown(Keyboard.KEY_LEFT) && (
+                Keyboard.isKeyDown(Keyboard.KEY_UP) || Keyboard.isKeyDown(Keyboard.KEY_DOWN)
+        )) {
             currentTurnSpeed = TURN_SPEED;
         } else {
             currentTurnSpeed = 0;

@@ -6,6 +6,8 @@ import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
 import toolbox.Maths;
 
+import java.util.List;
+
 /**
  * Created by Kurt on 6/28/2017.
  */
@@ -13,12 +15,13 @@ public class TerrainShader extends ShaderProgram {
 
     private static final String VERTEX_FILE = "src/shaders/terrainVertexShader.txt";
     private static final String FRAGMENT_FILE = "src/shaders/terrainFragmentShader.txt";
+    private static final int MAX_LIGHTS = 4;
 
     private int location_transformationMatrix;
     private int location_projectionMatrix;
     private int location_viewMatrix;
-    private int location_lightPosition;
-    private int location_lightColor;
+    private int location_lightPosition[];
+    private int location_lightColor[];
     private int location_shineDamper;
     private int location_reflectivity;
     private int location_skyColor;
@@ -27,6 +30,7 @@ public class TerrainShader extends ShaderProgram {
     private int location_gTexture;
     private int location_bTexture;
     private int location_blendMap;
+    private int location_attenuation[];
 
     public TerrainShader() {
         super(VERTEX_FILE, FRAGMENT_FILE);
@@ -47,8 +51,6 @@ public class TerrainShader extends ShaderProgram {
         location_transformationMatrix = super.getUniformLocation("transformationMatrix");
         location_projectionMatrix = super.getUniformLocation("projectionMatrix");
         location_viewMatrix = super.getUniformLocation("viewMatrix");
-        location_lightPosition = super.getUniformLocation("lightPosition");
-        location_lightColor = super.getUniformLocation("lightColor");
         location_shineDamper = super.getUniformLocation("shineDamper");
         location_reflectivity = super.getUniformLocation("reflectivity");
         location_skyColor = super.getUniformLocation("skyColor");
@@ -57,6 +59,16 @@ public class TerrainShader extends ShaderProgram {
         location_gTexture = super.getUniformLocation("gTexture");
         location_bTexture = super.getUniformLocation("bTexture");
         location_blendMap = super.getUniformLocation("blendMap");
+
+        location_lightPosition = new int[MAX_LIGHTS];
+        location_lightColor = new int[MAX_LIGHTS];
+        location_attenuation = new int[MAX_LIGHTS];
+
+        for (int i = 0; i < MAX_LIGHTS; i++) {
+            location_lightPosition[i] = super.getUniformLocation("lightPosition[" + i + "]");
+            location_lightColor[i] = super.getUniformLocation("lightColor[" + i + "]");
+            location_attenuation[i] = super.getUniformLocation("attenuation[" + i + "]");
+        }
     }
 
     public void connectTextureUnits() {
@@ -67,7 +79,7 @@ public class TerrainShader extends ShaderProgram {
         super.loadInt(location_blendMap, 4);
     }
 
-    public void loadSkyColor(float r, float g, float b){
+    public void loadSkyColor(float r, float g, float b) {
         super.loadVector(location_skyColor, new Vector3f(r, g, b));
     }
 
@@ -75,10 +87,10 @@ public class TerrainShader extends ShaderProgram {
      * Load the shine variables into the Uniform Variables in the fragment shader
      * The shine variables will determine how reflective and "shinny" the model will be.
      *
-     * @param damper - Determines how much "scatter" a reflective surface has. The more scatter, the further away
-     *                 the camera can be from the surface normal and still pick up reflected light.
+     * @param damper       - Determines how much "scatter" a reflective surface has. The more scatter, the further away
+     *                     the camera can be from the surface normal and still pick up reflected light.
      * @param reflectivity - Represents how reflective a given surface is. A value of 0 means the surface reflects no
-     *                       light at all.
+     *                     light at all.
      */
     public void loadShineVariables(float damper, float reflectivity) {
         super.loadFloat(location_shineDamper, damper);
@@ -95,6 +107,7 @@ public class TerrainShader extends ShaderProgram {
 
     /**
      * Load the Camera view matrix into the Uniform Variable in the shader
+     *
      * @param camera-The camera containing the view to be loaded into the shader
      */
     public void loadViewMatrix(Camera camera) {
@@ -104,6 +117,7 @@ public class TerrainShader extends ShaderProgram {
 
     /**
      * Load the projection matrix into the Uniform Variable in the shader
+     *
      * @param projection - the projection to load into the shader.
      */
     public void loadProjectionMatrix(Matrix4f projection) {
@@ -112,11 +126,22 @@ public class TerrainShader extends ShaderProgram {
 
     /**
      * Load light values to shaders
-     * @param light - Light object
+     *
+     * @param lights - Light object
      */
-    public void loadLight(Light light) {
-        super.loadVector(location_lightPosition, light.getPosition());
-        super.loadVector(location_lightColor, light.getColor());
+    public void loadLights(List<Light> lights) {
+        for (int i = 0; i < MAX_LIGHTS; i++) {
+            if (i < lights.size()) {
+                super.loadVector(location_lightPosition[i], lights.get(i).getPosition());
+                super.loadVector(location_lightColor[i], lights.get(i).getColor());
+                super.loadVector(location_attenuation[i], lights.get(i).getAttenuation());
+            }
+            else {
+                // Must supply something to the lights in the shader
+                super.loadVector(location_lightPosition[i], new Vector3f(0,0,0));
+                super.loadVector(location_lightColor[i], new Vector3f(0,0,0));
+                super.loadVector(location_attenuation[i], new Vector3f(1,0,0));
+            }
+        }
     }
-
 }

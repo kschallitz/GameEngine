@@ -63,6 +63,7 @@ public class EntityRenderer {
 
         // Get specular lighting info - reflectivity values from our textured model
         ModelTexture texture = model.getTexture();
+        shader.loadNumberOfRows(model.getTexture().getNumberOfRowsInAtlas());
 
         if (texture.isHasTransparancy()) {
             MasterRenderer.disableCulling();
@@ -98,6 +99,7 @@ public class EntityRenderer {
 
         // Load the transformation matrix into the shader
         shader.loadTransformationMatrix(transformationMatrix);
+        shader.loadOffset(entity.getTextureXOffset(), entity.getTextureYOffset());
     }
 }
 

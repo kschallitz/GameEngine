@@ -29,6 +29,7 @@ public class Camera {
         float horizontalDistance = calculateHorizontalDistance();
         float verticalDistance = calculateVerticalDistance();
         calculateCameraPosition(horizontalDistance, verticalDistance);
+        this.yaw = 180 - (player.getRotY() + angleAroundPlayer);
     }
     public Vector3f getPosition() {
         return position;
