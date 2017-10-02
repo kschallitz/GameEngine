@@ -19,7 +19,6 @@ import java.io.IOException;
 public class Terrain {
     public static final float SIZE = 800;
     private static final float MAX_HEIGHT = 40;
-    private static final float MIN_HEIGHT = -40;
     private static final float MAX_PIXEL_COLOR = 256 * 256 * 256;
 
     private float x;
@@ -65,7 +64,7 @@ public class Terrain {
         float terrainX = worldX - this.x;
         float terrainZ = worldZ - this.z;
 
-        float gridSquareSize = SIZE / (float) (heights.length - 1f);
+        float gridSquareSize = SIZE / ((float)heights.length - 1f);
         int gridSquareX = (int) Math.floor(terrainX / gridSquareSize);
         int gridSquareZ = (int) Math.floor(terrainZ / gridSquareSize);
 

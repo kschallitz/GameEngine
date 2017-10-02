@@ -8,14 +8,19 @@ import org.lwjgl.util.vector.Vector3f;
  * Created by Kurt on 6/26/2017.
  */
 public class Camera {
+    private static final float DEFAULT_DFP = 38.0f;
+    private static final float DEFAULT_AAP = 45.0f;
+    private static final float DEFAULT_PITCH = 17.0f;
+    private static final float DEFAULT_YAW = 136.0f;
+    private static final float DEFAULT_ROLL = 0f;
 
-    private float disatanceFromPlayer = 50f;
-    private float angleAroundPlayer = 198.59953f;
+    private static float disatanceFromPlayer = DEFAULT_DFP;
+    private static float angleAroundPlayer = DEFAULT_AAP;
 
-    private Vector3f position = new Vector3f(5, 5f, 100);
-    private float pitch = 33.39998f;
-    private float yaw = 0f;
-    private float roll;
+    private static Vector3f position = new Vector3f(5, 5f, 100);
+    private static float pitch = DEFAULT_PITCH;
+    private static float yaw = DEFAULT_YAW;
+    private static float roll = DEFAULT_ROLL;
     private Player player;
 
     public Camera(Player player){
@@ -30,21 +35,6 @@ public class Camera {
         float verticalDistance = calculateVerticalDistance();
         calculateCameraPosition(horizontalDistance, verticalDistance);
         this.yaw = 180 - (player.getRotY() + angleAroundPlayer);
-    }
-    public Vector3f getPosition() {
-        return position;
-    }
-
-    public float getPitch() {
-        return pitch;
-    }
-
-    public float getYaw() {
-        return yaw;
-    }
-
-    public float getRoll() {
-        return roll;
     }
 
     private void calculateCameraPosition(float horizontalDistance, float verticalDistance) {
@@ -82,5 +72,37 @@ public class Camera {
             float angleChange = Mouse.getDX() * 0.3f;
             angleAroundPlayer -= angleChange;
         }
+    }
+    public Vector3f getPosition() {
+        return position;
+    }
+
+    public float getPitch() {
+        return pitch;
+    }
+
+    public float getYaw() {
+        return yaw;
+    }
+
+    public float getRoll() {
+        return roll;
+    }
+
+    public float getDisatanceFromPlayer() {
+        return disatanceFromPlayer;
+    }
+
+    public float getAngleAroundPlayer() {
+        return angleAroundPlayer;
+    }
+
+    public static void reset() {
+        disatanceFromPlayer = DEFAULT_DFP;
+        angleAroundPlayer = DEFAULT_AAP;
+        position = new Vector3f(5, 5f, 100);
+        pitch = DEFAULT_PITCH;
+        yaw = DEFAULT_YAW;
+        roll = DEFAULT_ROLL;
     }
 }

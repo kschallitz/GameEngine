@@ -4,6 +4,9 @@ import entities.Camera;
 import entities.Entity;
 import entities.Light;
 import entities.Player;
+import fontMeshCreator.FontType;
+import fontMeshCreator.GUIText;
+import fontRendering.TextMaster;
 import guis.GuiRenderer;
 import guis.GuiTexture;
 import models.RawModel;
@@ -23,6 +26,7 @@ import textures.ModelTexture;
 import textures.TerrainTexture;
 import textures.TerrainTexturePack;
 
+import java.io.File;
 import java.util.*;
 
 /**
@@ -44,16 +48,19 @@ public class MainGameLoop {
     private static TexturedModel fern;
     private static List<Entity> entities;
     private static List<Light> lights;
-    //private static List<GuiTexture> guis;
     private static HashMap<GuiTexture, Long> mapGUIs = new HashMap<>();
+    private static FontType font;
+    public static boolean showDebugInfo = false;
 
     public static void main(String[] args) {
 
         DisplayManager.createDisplay();
-        // Loads data into VAO
         loader = new Loader();
-        entities = new ArrayList<>();
+        TextMaster.init(loader);
+        loadFonts();
+        ArrayList<GUIText> text = new ArrayList<>();
 
+        entities = new ArrayList<>();
         loadGameObjects();
         loadGamePieces();
 
@@ -62,7 +69,7 @@ public class MainGameLoop {
         loadTerrain();
         placeTerrainObjects();
 
-        createLightSource();
+        createLightSources();
         addLamps();
 
         loadGUIs();
@@ -76,22 +83,22 @@ public class MainGameLoop {
         while (!Display.isCloseRequested()) {
             camera.move();
 
-            int mapZ = (int) Math.floor(player.getPosition().z / Terrain.SIZE); // Row
-            int mapX = (int) Math.floor(player.getPosition().x / Terrain.SIZE); // Col
-            Terrain terrain = terrainManager.get(mapZ, mapX);
+            Terrain terrain = terrainManager.get(player);
 
             player.move(terrain);
 
             // Render Terrains around player
             renderer.processTerrain(terrain);
-            renderer.processTerrain(terrainManager.get(mapZ - 1, mapX));
-            renderer.processTerrain(terrainManager.get(mapZ + 1, mapX));
-            renderer.processTerrain(terrainManager.get(mapZ, mapX - 1));
-            renderer.processTerrain(terrainManager.get(mapZ, mapX + 1));
-            renderer.processTerrain(terrainManager.get(mapZ + 1, mapX + 1));
-            renderer.processTerrain(terrainManager.get(mapZ + 1, mapX - 1));
-            renderer.processTerrain(terrainManager.get(mapZ - 1, mapX + 1));
-            renderer.processTerrain(terrainManager.get(mapZ - 1, mapX - 1));
+            int terrainRow = terrainManager.getTerrainRow();
+            int terrainCol = terrainManager.getTerrainCol();
+            renderer.processTerrain(terrainManager.get(terrainRow  - 1, terrainCol));
+            renderer.processTerrain(terrainManager.get(terrainRow  + 1, terrainCol));
+            renderer.processTerrain(terrainManager.get(terrainRow          , terrainCol - 1));
+            renderer.processTerrain(terrainManager.get(terrainRow          , terrainCol + 1));
+            renderer.processTerrain(terrainManager.get(terrainRow  + 1, terrainCol + 1));
+            renderer.processTerrain(terrainManager.get(terrainRow  + 1, terrainCol - 1));
+            renderer.processTerrain(terrainManager.get(terrainRow  - 1, terrainCol + 1));
+            renderer.processTerrain(terrainManager.get(terrainRow  - 1, terrainCol - 1));
 
             // Game pieces
             renderer.processEntity(player);
@@ -106,14 +113,45 @@ public class MainGameLoop {
                 renderer.processEntity(entity);
             }
 
+            if (showDebugInfo == true) {
+                text.add(new GUIText("Player position: x{" +
+                        player.getPosition().x + "}, y{" +
+                        player.getPosition().y + "}, z{" +
+                        player.getPosition().z + "} " +
+
+                        "Camera: Position{" + camera.getPosition().x + ", " +
+                        camera.getPosition().y + ", " +
+                        camera.getPosition().z + "}, pitch{" +
+                        camera.getPitch() + "}, roll{" +
+                        camera.getRoll() + "} , yaw{" +
+                        camera.getYaw() + "}, dfp{" +
+                        camera.getDisatanceFromPlayer() + "}, aap{" +
+                        camera.getAngleAroundPlayer() + "}",
+                        1,
+                        font,
+                        new Vector2f(0, 0),
+                        0.5f,
+                        false));
+            }
+
             // RENDER ALL ITEMS
             renderer.render(lights, camera);
             manageGUIs();
             guiRenderer.render(mapGUIs.keySet());
-
+            TextMaster.render();
+            for (GUIText t : text) {t.remove();}
             DisplayManager.updateDisplay();
         }
 
+        cleanUp(renderer, guiRenderer);
+    }
+
+    private static void loadFonts() {
+        font = new FontType(loader.loadTexture("veranda"), new File("res/veranda.fnt"));
+    }
+
+    private static void cleanUp(MasterRenderer renderer, GuiRenderer guiRenderer) {
+        TextMaster.cleanUp();
         guiRenderer.cleanUp();
         renderer.cleanUp();
         loader.cleanUp();
@@ -133,7 +171,6 @@ public class MainGameLoop {
         }
     }
 
-
     private static void loadGUIs() {
         // Introduce the GUIs
         GuiTexture tobagoLogoGUI = new GuiTexture(loader.loadTexture("tabago1"), new Vector2f(0.5f, 0.5f), new Vector2f(0.25f, 0.25f));
@@ -142,21 +179,44 @@ public class MainGameLoop {
 
     private static void addLamps() {
         // Add lamps
-        entities.add(new Entity(lamp, new Vector3f(185, terrainManager.getHeightAtPosition(185, 293), 293), 0, 0, 0, 1));
-        //entities.add(new Entity(lamp, new Vector3f(185, -4.7f, 293), 0, 0, 0, 1));
-        entities.add(new Entity(lamp, new Vector3f(370, terrainManager.getHeightAtPosition(370, 300), 300), 0, 0, 0, 1));
-        //entities.add(new Entity(lamp, new Vector3f(370, 4.2f, 300), 0, 0, 0, 1));
-        entities.add(new Entity(lamp, new Vector3f(293, terrainManager.getHeightAtPosition(293, 305), 305), 0, 0, 0, 1));
-        //entities.add(new Entity(lamp, new Vector3f(293, -6.8f, 305), 0, 0, 0, 1));
+        entities.add(new Entity(lamp,
+                new Vector3f((float)(0.23125 * Terrain.SIZE),
+                terrainManager.getHeightAtPosition((float)(0.23125 * Terrain.SIZE), -(float)(0.36625 * Terrain.SIZE)),
+                -(float)(0.36625 * Terrain.SIZE)), 0, 0, 0, 1));
+
+        entities.add(new Entity(lamp,
+                new Vector3f((float)(0.4625 * Terrain.SIZE),
+                terrainManager.getHeightAtPosition((float)(0.4625 * Terrain.SIZE), -(float)(0.375) * Terrain.SIZE),
+             -(float)(0.375) * Terrain.SIZE), 0, 0, 0, 1));
+
+        entities.add(new Entity(lamp,
+                new Vector3f((float)(0.36625 * Terrain.SIZE),
+                terrainManager.getHeightAtPosition((float)(0.36625 * Terrain.SIZE), -(float)(0.38125 * Terrain.SIZE)),
+                -(float)(0.38125 * Terrain.SIZE)), 0, 0, 0, 1));
     }
 
-    private static void createLightSource() {
+    private static void createLightSources() {
         // Create the light source for the world - let there be light!
         lights = new ArrayList<>();
-        lights.add(new Light(new Vector3f(0, 10000, -7000), new Vector3f(0.4f, 0.4f, 0.4f)));
-        lights.add(new Light(new Vector3f(185, terrainManager.getHeightAtPosition(185, 293) + 17, 293),   new Vector3f(2, 0, 0), new Vector3f(1, 0.01f, 0.002f)));
-        lights.add(new Light(new Vector3f(370, terrainManager.getHeightAtPosition(370, 300) + 17, 300),   new Vector3f(0, 2, 2), new Vector3f(1, 0.01f, 0.002f)));
-        lights.add(new Light(new Vector3f(293, terrainManager.getHeightAtPosition(293, 305) + 17, 305),    new Vector3f(2, 2, 0), new Vector3f(1, 0.01f, 0.002f)));
+        lights.add(new Light(new Vector3f(10000, 10000, -10000), new Vector3f(1.3f, 1.3f, 1.3f)));
+
+        lights.add(new Light(new Vector3f((float)(0.23125 * Terrain.SIZE),
+                terrainManager.getHeightAtPosition((float)(0.23125 * Terrain.SIZE), -(float)(0.36625 * Terrain.SIZE)) + 14f,
+                -(float)(0.36625 * Terrain.SIZE)),
+                new Vector3f(2, 0, 0),
+                new Vector3f(1, 0.01f, 0.002f)));
+
+        lights.add(new Light(new Vector3f((float)(0.4625 * Terrain.SIZE),
+                terrainManager.getHeightAtPosition((float)(0.4625 * Terrain.SIZE), -(float)(0.375) * Terrain.SIZE) + 14f,
+                -(float)(0.375) * Terrain.SIZE),
+                new Vector3f(0, 2, 2),
+                new Vector3f(1, 0.01f, 0.002f)));
+
+        lights.add(new Light(new Vector3f((float)(0.36625 * Terrain.SIZE),
+                terrainManager.getHeightAtPosition((float)(0.36625 * Terrain.SIZE), -(float)(0.38125 * Terrain.SIZE)) + 14f,
+                -(float)(0.38125 * Terrain.SIZE)),
+                new Vector3f(2, 2, 0),
+                new Vector3f(1, 0.01f, 0.002f)));
     }
 
     private static void placeTerrainObjects() {
@@ -164,20 +224,20 @@ public class MainGameLoop {
         float x;
         float z;
         for (int i = 0; i < 1500; i++) {
-            x = random.nextFloat() * 1600;
-            z = random.nextFloat() * 800;
+            x = random.nextFloat() * Terrain.SIZE * 2;
+            z = random.nextFloat() * -Terrain.SIZE;
             entities.add(new Entity(tree, new Vector3f(x, terrainManager.getHeightAtPosition(x, z), z), 0, 0, 0, random.nextFloat() * 5 - .5f));
-            x = random.nextFloat() * 1600;
-            z = random.nextFloat() * 800;
+            x = random.nextFloat() * Terrain.SIZE * 2;
+            z = random.nextFloat() * -Terrain.SIZE;
             entities.add(new Entity(lolipopTree, new Vector3f(x, terrainManager.getHeightAtPosition(x, z), z), 0, 0, 0, random.nextFloat() * 0.5f));
-            x = random.nextFloat() * 1600;
-            z = random.nextFloat() * 800;
+            x = random.nextFloat() * Terrain.SIZE * 2;
+            z = random.nextFloat() * -Terrain.SIZE;
             entities.add(new Entity(grass, new Vector3f(x, terrainManager.getHeightAtPosition(x, z), z), 0, 0, 0, 1));
-            x = random.nextFloat() * 1600;
-            z = random.nextFloat() * 800;
+            x = random.nextFloat() * Terrain.SIZE * 2;
+            z = random.nextFloat() * -Terrain.SIZE;
             entities.add(new Entity(flower, new Vector3f(x, terrainManager.getHeightAtPosition(x, z), z), 0, 0, 0, 1));
-            x = random.nextFloat() * 1600;
-            z = random.nextFloat() * 800;
+            x = random.nextFloat() * Terrain.SIZE * 2;
+            z = random.nextFloat() * -Terrain.SIZE;
             entities.add(new Entity(fern, random.nextInt(4), new Vector3f(x, terrainManager.getHeightAtPosition(x, z), z), 0, 0, 0, 0.6f));
         }
 
@@ -189,8 +249,10 @@ public class MainGameLoop {
     private static void loadTerrain() {
         // *********************************** TERRAIN  ********************************************
         terrainManager = new TerrainManager();
-        terrainManager.add(0, 0, new Terrain(0, 0, loader, texturePack, blendMap, "heightMap"));
-        terrainManager.add(0, 1, new Terrain(1, 0, loader, texturePack, blendMap, "heightMap"));
+        //terrainManager.add(0, 0, new Terrain(0, -1, loader, texturePack, blendMap, "heightMap"));
+        terrainManager.add(new Terrain(0, -1, loader, texturePack, blendMap, "heightMap"));
+        //terrainManager.add(0, 1, new Terrain(1, -1, loader, texturePack, blendMap, "heightMap"));
+        terrainManager.add(new Terrain(1, -1, loader, texturePack, blendMap, "heightMap"));
 
     }
 
@@ -232,15 +294,15 @@ public class MainGameLoop {
 
         lamp = new TexturedModel(OBJLoader.loadObjModel("lamp", loader),
                 new ModelTexture(loader.loadTexture("lamp")));
+        lamp.getTexture().setUseFakeLighting(true);
     }
 
     private static void loadGamePieces() {
         TexturedModel navigator = new TexturedModel(OBJLoader.loadObjModel("navigator", loader),
                 new ModelTexture(loader.loadTexture("white")));
 
-        //Player player = new Player(navigator, new Vector3f(5, 1.5f, 5), -90, 0, 90, .5f);
-        player = new Player(navigator, new Vector3f(370, 10f, 300), -90, 0, 90, .5f);
-
+        //Player
+        player = new Player(navigator, new Vector3f((float)(0.2125 * Terrain.SIZE), 10f, -(float)(0.375 * Terrain.SIZE)), -90, 0, 90, .5f);
     }
 
     private static void loadGameObjects() {
@@ -255,6 +317,6 @@ public class MainGameLoop {
 
         tikiHead.getTexture().setHasTransparancy(false);
         tikiHead.getTexture().setUseFakeLighting(true);
-        tikiHeadEntity = new Entity(tikiHead, new Vector3f(50, -0.5f, 50), 0, 0, 0, 5f);
+        tikiHeadEntity = new Entity(tikiHead, new Vector3f(50, -0.5f, -50), 0, 0, 0, 5f);
     }
 }

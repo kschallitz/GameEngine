@@ -1,11 +1,14 @@
 package entities;
 
+import engineTester.MainGameLoop;
 import models.TexturedModel;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.util.vector.Vector3f;
 import renderEngine.DisplayManager;
 import terrains.Terrain;
 import terrains.TerrainManager;
+
+import static java.lang.System.exit;
 
 /**
  * Created by Kurt on 6/30/2017.
@@ -31,6 +34,10 @@ public class Player extends Entity {
     }
 
     public void move(Terrain terrain) {
+        if (terrain == null) {
+            throw new IllegalArgumentException("Terrain cannot be null!");
+        }
+
         checkInputs();
         super.increaseRotation(0, 0, currentTurnSpeed * DisplayManager.getFrameTimeSeconds());
         float distance = currentSpeed * DisplayManager.getFrameTimeSeconds();
@@ -111,7 +118,18 @@ public class Player extends Entity {
 
         // END GAME
         if (Keyboard.isKeyDown(Keyboard.KEY_ESCAPE)) {
-            System.exit(-1);
+            exit(-1);
+        }
+
+        // Enable/Disable debug info
+        // Move camera left / right
+        if (Keyboard.isKeyDown(Keyboard.KEY_F1)) {
+            MainGameLoop.showDebugInfo = !MainGameLoop.showDebugInfo;
+        }
+
+        // Reset the camera
+        if (Keyboard.isKeyDown(Keyboard.KEY_F12)) {
+            Camera.reset();
         }
     }
 }
